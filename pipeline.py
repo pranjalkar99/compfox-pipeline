@@ -1,0 +1,107 @@
+import os
+import tempfile
+import aspose.words as aw
+from bs4 import BeautifulSoup
+from PyPDF2 import PdfReader, PdfWriter
+from fastapi import FastAPI, UploadFile
+import json
+import PyPDF2
+import requests
+import requests
+import json
+import uuid
+import requests
+from tqdm import tqdm
+import os
+import shutil
+from google.cloud import storage
+from split import make_batch
+from upload_gcp import upload_folder_to_gcs
+gcs_new_input_bucket="compfox-pipeline-cases"
+import ast
+## fun for download from drive
+from fastapi import FastAPI
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
+app = FastAPI()
+SCOPES = ['https://www.googleapis.com/auth/drive']
+folder_id = '1bcSMpMHuojzK2eZD734PXSMPbgJo9WJ8'
+
+# Load the service account key file
+credentials = service_account.Credentials.from_service_account_file('compfox-367313-0c3890a157f2.json')
+credentials = credentials.with_scopes(SCOPES)
+
+# Configure the Google Drive client
+drive_service = build('drive', 'v3', credentials=credentials)
+import os
+import io
+from googleapiclient.http import MediaIoBaseDownload
+
+with open('last_done.txt','r') as f:
+    data = f.read()
+last_list = ast.literal_eval(data)
+def download_files_from_folder(folder_id, destination_folder):
+    # Create destination folder if it doesn't exist
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+
+    # List all files in the folder
+    response = drive_service.files().list(
+        q=f"'{folder_id}' in parents and trashed=false",
+        fields="files(id, name)"
+    ).execute()
+    test = [file for file in last_list]
+    files = response.get('files', [])
+    org_list = [file for file in files['name']]
+    diff_list = [file for file in org_list if file not in test]
+    if diff_list:
+        for file in diff_list:
+            file_id = file['id']
+            file_name = file['name']
+            file_path = os.path.join(destination_folder, file_name)
+
+            # Download each file
+            request = drive_service.files().get_media(fileId=file_id)
+            fh = io.FileIO(file_path, mode='wb')
+            downloader = MediaIoBaseDownload(fh, request)
+
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+                print(f"Downloaded {file_name}: {int(status.progress() * 100)}%")
+    else:
+        return "all files are already uploaded",diff_list
+    return "Downloading finished",diff_list
+
+@app.get("/")
+def hello():
+    return {"message": "Hello World"}
+
+@app.get("/process_files")
+def process_files():
+    # Retrieve files from the Google Drive folder
+    response = drive_service.files().list(q=f"'{folder_id}' in parents").execute()
+    files = response.get('files')
+    try:
+        status,diff_list = download_files_from_folder(folder_id, 'static')
+    
+    except Exception as e:
+        return {"message": f"error in drive download {str(e)}"}
+    if diff_list:
+        try:
+            succes = make_batch('static','temp_output')
+            shutil.rmtree('static')
+        except Exception as e:
+            return {"message": f"error in proccesing the files {str(e)}"}
+        try:
+            gcp_status = upload_folder_to_gcs(gcs_new_input_bucket,'temp_output/json_files')
+            for f in diff_list:
+                last_list.append(f)
+            with open('last_done.txt','w') as s:
+                s.write(str(last_list))
+        except Exception as e:
+            return {"message": f"error in gcp upload files {str(e)}"}
+    else:
+        return "all files are already proccesed"
+    return {"gdrive": status,"proccsing":succes,"gcp":gcp_status}
