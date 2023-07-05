@@ -109,3 +109,20 @@ def process_files():
     else:
         return "all files are already proccesed"
     return {"gdrive": status,"proccsing":succes,"gcp":gcp_status}
+
+@app.get("/remove_extra_png")
+def remove_extra_png_files():
+    folder_path = "/"
+
+    # Get a list of all files in the folder
+    files = os.listdir(folder_path)
+
+    # Filter the list to include only .png files
+    png_files = [file for file in files if file.endswith(".png")]
+
+    # Remove the extra .png files
+    for png_file in png_files:
+        file_path = os.path.join(folder_path, png_file)
+        os.remove(file_path)
+
+    return {"message": "Extra .png files removed"}
