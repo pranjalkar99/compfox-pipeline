@@ -51,25 +51,28 @@ def download_files_from_folder(folder_id, destination_folder):
         q=f"'{folder_id}' in parents and trashed=false",
         fields="files(id, name)"
     ).execute()
-    test = [file for file in last_list]
     files = response.get('files', [])
-    org_list = [file for file in files['name']]
-    diff_list = [file for file in org_list if file not in test]
+    print(last_list)
+    org_list = [file['name'] for file in files]
+    print(org_list)
+    diff_list = [file for file in org_list if file not in last_list]
+    print(diff_list)
     if diff_list:
-        for file in diff_list:
-            file_id = file['id']
-            file_name = file['name']
-            file_path = os.path.join(destination_folder, file_name)
+        for file in files:
+            if file['name'] in diff_list:
+                file_id = file['id']
+                file_name = file['name']
+                file_path = os.path.join(destination_folder, file_name)
 
-            # Download each file
-            request = drive_service.files().get_media(fileId=file_id)
-            fh = io.FileIO(file_path, mode='wb')
-            downloader = MediaIoBaseDownload(fh, request)
+                # Download each file
+                request = drive_service.files().get_media(fileId=file_id)
+                fh = io.FileIO(file_path, mode='wb')
+                downloader = MediaIoBaseDownload(fh, request)
 
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-                print(f"Downloaded {file_name}: {int(status.progress() * 100)}%")
+                done = False
+                while not done:
+                    status, done = downloader.next_chunk()
+                    print(f"Downloaded {file_name}: {int(status.progress() * 100)}%")
     else:
         return "all files are already uploaded",diff_list
     return "Downloading finished",diff_list
@@ -100,6 +103,7 @@ def process_files():
                 last_list.append(f)
             with open('last_done.txt','w') as s:
                 s.write(str(last_list))
+            shutil.rmtree('temp_output')
         except Exception as e:
             return {"message": f"error in gcp upload files {str(e)}"}
     else:
