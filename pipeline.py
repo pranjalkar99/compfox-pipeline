@@ -106,7 +106,7 @@ def process_files():
 
 @app.get("/remove_extra_png")
 def remove_extra_png_files():
-    folder_path = "compfox-pipeline"
+    folder_path = "."
 
     # Get a list of all files in the folder
     files = os.listdir(folder_path)
@@ -120,3 +120,16 @@ def remove_extra_png_files():
         os.remove(file_path)
 
     return {"message": "Extra .png files removed"}
+@app.get("/get_status")
+def get_files():
+    with open('last_done.txt','r') as f:
+        data = f.read()
+    files_list = ast.literal_eval(data)
+    total_files = len(files_list)
+    return {'total files':total_files}
+@app.get("/get_file_name")
+def get_file_names():
+    with open('last_done.txt','r') as f:
+        data = f.read()
+    files_name = ast.literal_eval(data)
+    return {'files':files_name}
