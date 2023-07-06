@@ -125,11 +125,35 @@ def get_files():
     with open('last_done.txt','r') as f:
         data = f.read()
     files_list = ast.literal_eval(data)
-    total_files = len(files_list)
-    return {'total files':total_files}
+    # List all files in the folder
+    response = drive_service.files().list(
+        q=f"'{folder_id}' in parents and trashed=false",
+        fields="files(id, name)"
+    ).execute()
+    files = response.get('files', [])
+    print(last_list)
+    org_list = [file['name'] for file in files]
+    print(org_list)
+    diff_list = [file for file in org_list if file not in files_list]
+    new_files = len(diff_list)
+    print(diff_list)
+    already_proccesed_files = len(files_list)
+    return {'already_proccesed':already_proccesed_files,'new_files':new_files}
 @app.get("/get_file_name")
 def get_file_names():
     with open('last_done.txt','r') as f:
         data = f.read()
     files_name = ast.literal_eval(data)
-    return {'files':files_name}
+    # List all files in the folder
+    response = drive_service.files().list(
+        q=f"'{folder_id}' in parents and trashed=false",
+        fields="files(id, name)"
+    ).execute()
+    files = response.get('files', [])
+    print(last_list)
+    org_list = [file['name'] for file in files]
+    print(org_list)
+    diff_list = [file for file in org_list if file not in files_name]
+    print(diff_list)
+    already_proccesed_files = len(files_name)
+    return {'already_proccesed':files_name,'new_files':diff_list}
