@@ -20,4 +20,4 @@ RUN pip install -r requirements.txt
 COPY pipeline.py .
 
 # Set the entrypoint command to run your FastAPI app
-CMD ["uvicorn", "pipeline:app", "--host", "0.0.0.0"]
+CMD ["python", "-m", "uvicorn", "pipeline:app", "--host", "0.0.0.0"]

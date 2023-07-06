@@ -1,5 +1,4 @@
 import os
-import tempfile
 import aspose.words as aw
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader, PdfWriter
@@ -7,16 +6,15 @@ from fastapi import FastAPI, UploadFile
 import json
 import PyPDF2
 import requests
-import requests
-import json
 import uuid
 import requests
 from tqdm import tqdm
-import os
 import shutil
 from google.cloud import storage
 from split import make_batch
 from upload_gcp import upload_folder_to_gcs
+import io
+from googleapiclient.http import MediaIoBaseDownload
 gcs_new_input_bucket="compfox-pipeline-cases"
 import ast
 ## fun for download from drive
@@ -34,10 +32,6 @@ credentials = credentials.with_scopes(SCOPES)
 
 # Configure the Google Drive client
 drive_service = build('drive', 'v3', credentials=credentials)
-import os
-import io
-from googleapiclient.http import MediaIoBaseDownload
-
 with open('last_done.txt','r') as f:
     data = f.read()
 last_list = ast.literal_eval(data)
@@ -112,7 +106,7 @@ def process_files():
 
 @app.get("/remove_extra_png")
 def remove_extra_png_files():
-    folder_path = "/"
+    folder_path = "compfox-pipeline"
 
     # Get a list of all files in the folder
     files = os.listdir(folder_path)
