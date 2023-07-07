@@ -4,6 +4,9 @@ FROM python:3.11
 # Set the working directory inside the container
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y libicu-dev
+
+
 # Copy the requirements.txt file to the container
 COPY  requirements.txt .
 COPY last_done.txt .
@@ -20,4 +23,4 @@ RUN pip install -r requirements.txt
 COPY pipeline.py .
 
 # Set the entrypoint command to run your FastAPI app
-CMD ["python", "-m", "uvicorn", "pipeline:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "pipeline:app", "--host", "0.0.0.0", "--port", "8000"]
