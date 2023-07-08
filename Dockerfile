@@ -8,7 +8,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y libssl-dev
 
-RUN apt-get update && apt-get install -y libicu-dev
 
 # Copy the requirements.txt file to the container
 COPY  requirements.txt .
