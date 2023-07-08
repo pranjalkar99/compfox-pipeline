@@ -14,6 +14,7 @@ from google.cloud import storage
 from split import make_batch
 from upload_gcp import upload_folder_to_gcs
 import io
+os.environ['DOTNET_SYSTEM_GLOBALIZATION_INVARIANT'] = 'true'
 from googleapiclient.http import MediaIoBaseDownload
 gcs_new_input_bucket="compfox-pipeline-cases"
 import ast
