@@ -1,13 +1,9 @@
 # Use the official Python 3.11 image as the base image
 FROM python:3.11
 
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 
 # Set the working directory inside the container
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y libssl-dev
-
 
 # Copy the requirements.txt file to the container
 COPY  requirements.txt .
