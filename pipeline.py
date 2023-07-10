@@ -5,6 +5,15 @@ from PyPDF2 import PdfReader, PdfWriter
 from fastapi import FastAPI, UploadFile
 import json
 import PyPDF2
+from pymongo import MongoClient
+
+# Connect to the MongoDB server
+client = MongoClient('mongodb+srv://pw:pw@projects.wegmb8m.mongodb.net/?retryWrites=true&w=majority')
+
+# Access the desired database and collection
+db = client['simulate_compfox']
+collection = db['last_done']
+
 import requests
 import uuid
 import requests
