@@ -3,6 +3,7 @@ aspose-words
 beautifulsoup4
 cachetools
 certifi
+pymongo
 charset-normalizer
 click
 dnspython
@@ -48,6 +49,6 @@ ujson
 uritemplate
 urllib3
 uvicorn
-uvloop
+# uvloop
 watchfiles
 websockets

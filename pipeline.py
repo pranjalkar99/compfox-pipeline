@@ -41,9 +41,15 @@ credentials = credentials.with_scopes(SCOPES)
 
 # Configure the Google Drive client
 drive_service = build('drive', 'v3', credentials=credentials)
-with open('last_done.txt','r') as f:
-    data = f.read()
-last_list = ast.literal_eval(data)
+# with open('last_done.txt','r') as f:
+#     data = f.read()
+# last_list = ast.literal_eval(data)
+# Get the list of already processed files from MongoDB
+document = collection.find_one({'uid': 'desperate_times'})
+if document is None:
+    last_list = []
+else:
+    last_list = document['last_done']
 def download_files_from_folder(folder_id, destination_folder):
     # Create destination folder if it doesn't exist
     if not os.path.exists(destination_folder):
@@ -82,7 +88,7 @@ def download_files_from_folder(folder_id, destination_folder):
 
 @app.get("/")
 def hello():
-    return {"message": "Hello World"}
+    return {"message": "Go to /docs to visit API documentation."}
 
 @app.get("/process_files")
 def process_files():
@@ -102,10 +108,11 @@ def process_files():
             return {"message": f"error in proccesing the files {str(e)}"}
         try:
             gcp_status = upload_folder_to_gcs(gcs_new_input_bucket,'temp_output/json_files')
-            for f in diff_list:
-                last_list.append(f)
-            with open('last_done.txt','w') as s:
-                s.write(str(last_list))
+            collection.update_one({'uid': 'desperate_times'}, {'$set': {'last_done': last_list + diff_list}})
+            # for f in diff_list:
+            #     last_list.append(f)
+            # with open('last_done.txt','w') as s:
+            #     s.write(str(last_list))
             shutil.rmtree('temp_output')
         except Exception as e:
             return {"message": f"error in gcp upload files {str(e)}"}
@@ -131,23 +138,26 @@ def remove_extra_png_files():
     return {"message": "Extra .png files removed"}
 @app.get("/get_status")
 def get_files():
-    with open('last_done.txt','r') as f:
-        data = f.read()
-    files_list = ast.literal_eval(data)
+    # with open('last_done.txt','r') as f:
+    #     data = f.read()
+    document = collection.find_one({'uid': 'desperate_times'})
+    if document is None:
+        last_list = []
+    else:
+        last_list = document['last_done']
+    # files_list = ast.literal_eval(data)
     # List all files in the folder
     response = drive_service.files().list(
         q=f"'{folder_id}' in parents and trashed=false",
         fields="files(id, name)"
     ).execute()
     files = response.get('files', [])
-    print(last_list)
     org_list = [file['name'] for file in files]
-    print(org_list)
-    diff_list = [file for file in org_list if file not in files_list]
+    diff_list = [file for file in org_list if file not in last_list]
     new_files = len(diff_list)
     print(diff_list)
-    already_proccesed_files = len(files_list)
-    return {'already_proccesed':already_proccesed_files,'new_files':new_files}
+    already_processed_files = len(last_list)
+    return {'already_processed': already_processed_files, 'new_files': new_files}
 @app.get("/get_file_name")
 def get_file_names():
     with open('last_done.txt','r') as f:
