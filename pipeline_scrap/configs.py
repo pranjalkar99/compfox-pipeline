@@ -10,3 +10,4 @@ logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s -  %(n
 logging.warning('This will get logged to a file')
 client_name = "last_done"
 collection_name = "compfox_simulate"
+gcs_new_input_bucket="compfox-pipeline-website-v2"

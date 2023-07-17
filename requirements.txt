@@ -23,6 +23,7 @@ httpcore
 httplib2
 httptools
 httpx
+pytest
 idna
 itsdangerous
 Jinja2
@@ -52,3 +53,5 @@ uvicorn
 # uvloop
 watchfiles
 websockets
+beautifulsoup4
+bs4
