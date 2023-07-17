@@ -10,7 +10,7 @@ import shutil
 import os
 from pymongo.mongo_client import MongoClient
 
+import pytest
 
-
-logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s -  %(name)s - %(levelname)s - %(message)s')
-logging.warning('This will get logged to a file')
+from ..split import make_batch
+from ..upload_gcp import upload_folder_to_gcs
